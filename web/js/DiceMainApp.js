@@ -26,19 +26,20 @@ app.controller("diceController", function ($scope, $interval, dice, common, scor
     $scope.rollStop = function () {
         $interval.cancel(roller);
         dice.setDice(imageNo);
-
+        score.setScore(imageNo);
         $log.info("score" + score.getScore());
+
         $log.info("X" + common.calculateX(score.getScore()));
         $log.info("Y" + common.calculateY(common.calculateX(score.getScore()),score.getScore()));
         $log.info("imageNo" + imageNo);
-        score.setScore(score.getScore()+imageNo);
+        //score.setScore(imageNo);
         common.check(score,snakes, imageNo);
         common.check(score,ladders, imageNo);
         $log.info("score" + score.getScore());
         $log.info("calculateX" + common.calculateX(score.getScore()));
         $log.info("calculateY" + common.calculateY(common.calculateX(score.getScore()),score.getScore()));
-        $scope.moveVertical = common.moveX(common.calculateX(score.getScore()));
-        $scope.moveHorizontal = common.moveY(common.calculateX(score.getScore()),common.calculateY(score.getScore()));
+        $scope.moveVertical = common.moveX(score.getScore(),common.calculateX(score.getScore()));
+        $scope.moveHorizontal = common.moveY(score.getScore(),common.calculateY(common.calculateX(score.getScore()),score.getScore()));
         var coin = angular.element(document.querySelector('#coin'));
         coin.css('top', $scope.moveVertical);
         coin.css('left', $scope.moveHorizontal);
@@ -52,32 +53,40 @@ app.service("common", function ($log) {
 
     this.calculateX = function (x) {
         var tempx = 0;
-        if (x > 10) {
-            tempx = ((x / 10) % 10);
+        tempx = ((x / 10) % 10);
+
+        if(x%10==0){
+            tempx=tempx-1;
         }
-        else
-        {
-            tempx=0;
-        }
-        return tempx;
+
+        $log.info("X ---------------------->"+parseInt(tempx));
+        return parseInt(tempx);
     };
 
     this.calculateY = function (x,y) {
         var tempy = 0;
         if (x == 0) {
-            tempy=y;
+            tempy=y-1;
         }
 
-        if (x > 1) {
+        if (x > 0) {
+            var tempx=0;
+            if(y%10==0){
+                tempx=x+1;
+            }
+            else{
+                tempx=x;
+            }
 
-            if ((x / 10) % 2 == 0) {
-                tempy = y % 10;
+            if (tempx % 2 == 0) {
+                tempy = Math.max(0,((y % 10)-1));
             }
             else {
-                tempy = (10 - y) % 10;
+                tempy = (10 - (y % 10));
             }
         }
 
+        $log.info("Y ---------------------->"+tempy);
 
         return tempy;
     };
@@ -85,24 +94,32 @@ app.service("common", function ($log) {
     this.check = function (score,x, y) {
         $log.info("SNAKESLADDERS      =============="+score.getScore());
 
-        for (var index = 0; index < x.length; x++) {
+        for (var index = 0; index < x.length; index++) {
             var path = x[index];
-            $log.info("CHECK WITH"+y);
-            if (x.pos == y) {
-                $log.info("GOT SNAME OR LADDER ..going from "+score.getScore());
-
-                score.setScore(x.goToPos);
-                $log.info("GOT SNAME OR LADDER ..going to "+score.getScore());
+            if (path.pos == score.getScore()) {
+                score.modifyScore(path.goToPos);
             }
         }
     };
 
-    this.moveX = function (x) {
-        return 900 - (x * 96.4);
+    this.moveX = function (score,x) {
+        var localX = 900 - (x * 96.4);
+        if (score == 100) {
+            localX = 38;
+        }
+
+        return localX;
     };
 
-    this.moveY = function (y) {
-        return 60 + (y * 125);
+    this.moveY = function (score,y) {
+        $log.info("MOVE YYY" + y);
+        $log.info("MOVE YYssss" + (60 + ((y) * 125)));
+        var localY = Math.min(1185, 60 + ((y) * 125));
+        if (score == 100) {
+            localY = 60;
+        }
+        return localY;
+
     };
 
 });
@@ -111,7 +128,17 @@ app.factory("score", function () {
 
     var score = 0;
     var addScore = function (tempScore) {
-        score = score + tempScore;
+        if (score < 100) {
+            score = parseInt(score) + parseInt(tempScore);
+            if(score > 100)
+            {
+                score=score-tempScore;
+            }
+        }
+    };
+
+    var changeScore=function(tempScore){
+       score=tempScore;
     };
 
     return {
@@ -120,6 +147,10 @@ app.factory("score", function () {
         },
         getScore: function () {
             return score;
+        }
+        ,
+        modifyScore: function (x) {
+            return changeScore(x);
         }
     };
 });

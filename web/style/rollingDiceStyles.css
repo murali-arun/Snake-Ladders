@@ -74,8 +74,8 @@
 
 #coin {
 
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 52px;
     top: 900px; /* 96.4px per vertical step*/
     left: 60px; /*125px per horizontal step */
     position: absolute;
