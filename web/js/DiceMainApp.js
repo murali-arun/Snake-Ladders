@@ -20,30 +20,22 @@ app.controller("diceController", function ($scope, $interval, dice, common, scor
         roller = $interval(function () {
             imageNo = Math.floor(Math.random() * 6 + 1);
             $scope.imagePath = "/images/face" + imageNo + ".png";
-        }, 500);
+        }, 300);
     };
 
     $scope.rollStop = function () {
         $interval.cancel(roller);
         dice.setDice(imageNo);
         score.setScore(imageNo);
-        $log.info("score" + score.getScore());
-
-        $log.info("X" + common.calculateX(score.getScore()));
-        $log.info("Y" + common.calculateY(common.calculateX(score.getScore()),score.getScore()));
-        $log.info("imageNo" + imageNo);
-        //score.setScore(imageNo);
         common.check(score,snakes, imageNo);
         common.check(score,ladders, imageNo);
-        $log.info("score" + score.getScore());
-        $log.info("calculateX" + common.calculateX(score.getScore()));
-        $log.info("calculateY" + common.calculateY(common.calculateX(score.getScore()),score.getScore()));
+
         $scope.moveVertical = common.moveX(score.getScore(),common.calculateX(score.getScore()));
         $scope.moveHorizontal = common.moveY(score.getScore(),common.calculateY(common.calculateX(score.getScore()),score.getScore()));
         var coin = angular.element(document.querySelector('#coin'));
+
         coin.css('top', $scope.moveVertical);
         coin.css('left', $scope.moveHorizontal);
-        $log.info("Final score" + score.getScore());
 
     };
 
@@ -51,48 +43,44 @@ app.controller("diceController", function ($scope, $interval, dice, common, scor
 
 app.service("common", function ($log) {
 
+    /*This function takes the score as input, and checks the digit at 10th place.
+    * like 23, it gives 2*/
     this.calculateX = function (x) {
         var tempx = 0;
         tempx = ((x / 10) % 10);
 
         if(x%10==0){
-            tempx=tempx-1;
+            tempx=tempx-1;  //this is done for numbers like 20, 30, 40 because they are the only ones not same as other number in rows.
         }
-
-        $log.info("X ---------------------->"+parseInt(tempx));
         return parseInt(tempx);
     };
 
     this.calculateY = function (x,y) {
         var tempy = 0;
         if (x == 0) {
-            tempy=y-1;
+            tempy=y-1; //We start from 1,1. Thats why reducing the number by 1.
         }
 
         if (x > 0) {
-            var tempx=0;
-            if(y%10==0){
-                tempx=x+1;
+            var tempx = 0;
+            if (y % 10 == 0) {
+                tempx = x + 1;  //This is to increase the value of X because calculation for Y has to be correct.
             }
-            else{
-                tempx=x;
+            else {
+                tempx = x;
             }
 
             if (tempx % 2 == 0) {
-                tempy = Math.max(0,((y % 10)-1));
+                tempy = Math.max(0, ((y % 10) - 1));
             }
             else {
                 tempy = (10 - (y % 10));
             }
         }
-
-        $log.info("Y ---------------------->"+tempy);
-
         return tempy;
     };
 
     this.check = function (score,x, y) {
-        $log.info("SNAKESLADDERS      =============="+score.getScore());
 
         for (var index = 0; index < x.length; index++) {
             var path = x[index];
@@ -107,13 +95,10 @@ app.service("common", function ($log) {
         if (score == 100) {
             localX = 38;
         }
-
         return localX;
     };
 
     this.moveY = function (score,y) {
-        $log.info("MOVE YYY" + y);
-        $log.info("MOVE YYssss" + (60 + ((y) * 125)));
         var localY = Math.min(1185, 60 + ((y) * 125));
         if (score == 100) {
             localY = 60;
